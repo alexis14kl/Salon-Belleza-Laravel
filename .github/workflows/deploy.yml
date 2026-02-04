@@ -1,0 +1,30 @@
+name: Deploy a Hostinger
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 147.93.38.64
+          port: 65002
+          username: u691277401
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            PROJECT=/home/u691277401/domains/alianzasagroindustriales.com/Mis_Sitios_WEB_Salon_Belleza/Mis_Sitios_WEB_Salon_Belleza
+            cd $PROJECT
+            git pull origin main
+            composer install --no-dev --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            chmod -R 775 storage bootstrap/cache
+            echo "Deploy completado!"
