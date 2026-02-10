@@ -20,7 +20,10 @@ jobs:
           script: |
             PROJECT=/home/u691277401/domains/alianzasagroindustriales.com/Mis_Sitios_WEB_Salon_Belleza/Mis_Sitios_WEB_Salon_Belleza
             cd $PROJECT
+            cp .env .env.backup
             git pull origin main
+            cp .env.backup .env
+            rm .env.backup
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
             php artisan config:cache
