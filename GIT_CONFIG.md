@@ -3,8 +3,20 @@
 ## Credenciales Git
 - **Usuario:** Rapalexism
 - **Email:** rapalexism@gmail.com
-- **GitHub Token:** `TU_TOKEN_GITHUB`
 - **Permisos del token:** Todos (full access)
+
+### Token de GitHub
+El token esta guardado en la URL del remote de cada repositorio.
+Para obtenerlo ejecutar:
+```bash
+git remote get-url origin
+# La URL tiene formato: https://TOKEN@github.com/alexis14kl/REPO.git
+# Copiar la parte entre https:// y @github.com
+```
+Para usarlo en los comandos:
+```bash
+TOKEN=$(git remote get-url origin | sed 's|https://\(.*\)@github.com.*|\1|')
+```
 
 ## Repositorios
 
@@ -16,51 +28,45 @@
 ## Configuracion inicial de Git en un proyecto
 
 ```bash
-# Configurar usuario (por repo, sin --global)
+# Obtener token del remote del repo actual
+TOKEN=$(git remote get-url origin | sed 's|https://\(.*\)@github.com.*|\1|')
+
 git config user.name "Rapalexism"
 git config user.email "rapalexism@gmail.com"
-
-# Agregar remote con token embebido para no pedir password
-git remote add origin https://TU_TOKEN_GITHUB@github.com/alexis14kl/NOMBRE_REPO.git
-
-# Push inicial
+git remote add origin https://${TOKEN}@github.com/alexis14kl/NOMBRE_REPO.git
 git push -u origin main
 ```
 
 ## Conexion a la API de GitHub via curl
 
-Cuando `gh` CLI no esta disponible, se usa `curl` directamente con la API REST de GitHub.
+Cuando `gh` CLI no esta disponible, se usa `curl` con la API REST de GitHub.
 
-### Header de autenticacion
+### Definir token (ejecutar primero)
 ```bash
--H "Authorization: token TU_TOKEN_GITHUB"
+TOKEN=$(git remote get-url origin | sed 's|https://\(.*\)@github.com.*|\1|')
 ```
 
 ### Crear un repositorio
 ```bash
-curl -s \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+curl -s -H "Authorization: token $TOKEN" \
   https://api.github.com/user/repos \
   -d '{"name":"NOMBRE_REPO","description":"Descripcion","public":true}'
 ```
 
 ### Ver estado de workflows (GitHub Actions)
 ```bash
-# Ultimo run del workflow - Backend
-curl -s \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+# Backend
+curl -s -H "Authorization: token $TOKEN" \
   "https://api.github.com/repos/alexis14kl/Salon-Belleza-Laravel/actions/runs?per_page=1"
 
-# Ultimo run del workflow - Frontend
-curl -s \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+# Frontend
+curl -s -H "Authorization: token $TOKEN" \
   "https://api.github.com/repos/alexis14kl/Salon-Belleza-Angular/actions/runs?per_page=1"
 ```
 
 ### Parsear respuesta con Python
 ```bash
-curl -s \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+curl -s -H "Authorization: token $TOKEN" \
   "https://api.github.com/repos/alexis14kl/Salon-Belleza-Angular/actions/runs?per_page=1" \
   > /tmp/run.json && python3 -c "
 import json
@@ -74,16 +80,14 @@ print(f'Conclusion: {r.get(\"conclusion\",\"en progreso\")}')
 
 ### Re-ejecutar un workflow fallido
 ```bash
-curl -s -X POST \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+curl -s -X POST -H "Authorization: token $TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/alexis14kl/REPO/actions/runs/RUN_ID/rerun"
 ```
 
 ### Ver detalle de jobs de un workflow
 ```bash
-curl -s \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+curl -s -H "Authorization: token $TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/alexis14kl/REPO/actions/runs/RUN_ID/jobs" \
   > /tmp/jobs.json && python3 -c "
@@ -98,13 +102,11 @@ for job in d['jobs']:
 
 ### Descargar y analizar logs de un workflow
 ```bash
-curl -s -L \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+curl -s -L -H "Authorization: token $TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/alexis14kl/REPO/actions/runs/RUN_ID/logs" \
   -o /tmp/logs.zip
 
-# Extraer errores del zip con Python
 python3 -c "
 import zipfile
 with zipfile.ZipFile('/tmp/logs.zip', 'r') as z:
@@ -118,12 +120,9 @@ with zipfile.ZipFile('/tmp/logs.zip', 'r') as z:
 
 ## Configurar Secretos de GitHub Actions
 
-Los secretos se encriptan con la llave publica del repo usando `pynacl`.
-
 ### 1. Obtener llave publica del repo
 ```bash
-curl -s \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+curl -s -H "Authorization: token $TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/alexis14kl/REPO/actions/secrets/public-key"
 ```
@@ -150,8 +149,7 @@ PYEOF
 
 ### 3. Crear/actualizar el secreto
 ```bash
-curl -s -X PUT \
-  -H "Authorization: token TU_TOKEN_GITHUB" \
+curl -s -X PUT -H "Authorization: token $TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/alexis14kl/REPO/actions/secrets/SSH_PASSWORD" \
   -d '{"encrypted_value":"VALOR_ENCRIPTADO","key_id":"KEY_ID_DEL_PASO_1"}'
@@ -168,28 +166,23 @@ curl -s -X PUT \
 
 ### Backend (Laravel)
 ```
-git push origin main
-  → GitHub Actions (.github/workflows/deploy.yml)
-    → SSH al servidor
-    → git pull + composer install + migrate + cache
+git push origin main -> GitHub Actions -> SSH al servidor -> git pull + composer install + migrate + cache
 ```
 
 ### Frontend (Angular)
 ```
-git push origin main
-  → GitHub Actions (.github/workflows/deploy.yml)
-    → npm ci + ng build --base-href /admin/
-    → SCP copia dist/ a public/admin/ en el servidor
+git push origin main -> GitHub Actions -> npm ci + ng build -> SCP a public/admin/ en servidor
 ```
 
 ## Servidor SSH
 - **Host:** 147.93.38.64
 - **Puerto:** 65002
 - **Usuario:** u691277401
-- **Password:** (guardado en secreto SSH_PASSWORD de ambos repos)
+- **Password:** guardado en secreto SSH_PASSWORD de ambos repos
 
 ## Notas
-- `gh` CLI no esta disponible en el entorno WSL, por eso se usa `curl` con la API REST
-- El token va embebido en la URL del remote para evitar prompts de password
-- Los workflows se disparan automaticamente en cada push a `main`
-- Para passwords con caracteres especiales (como `\`, `!`, `#`), usar `r'...'` en Python para evitar escape
+- `gh` CLI no esta disponible en WSL, se usa `curl` con API REST
+- El token esta embebido en la URL del remote (git remote get-url origin)
+- GitHub Push Protection bloquea tokens en texto plano y en base64 en commits
+- Los workflows se disparan automaticamente en cada push a main
+- Para passwords con caracteres especiales usar r'...' en Python
