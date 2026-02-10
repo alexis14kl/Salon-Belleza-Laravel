@@ -557,6 +557,92 @@
             font-size: 0.85rem;
         }
 
+        /* ========== LOGIN MODAL ========== */
+        .navbar__login {
+            color: var(--gold); border: 1px solid var(--gold);
+            padding: 0.4rem 1.2rem; border-radius: var(--radius);
+            font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; cursor: pointer;
+            transition: background var(--transition), color var(--transition);
+            min-height: 44px; display: flex; align-items: center;
+        }
+        .navbar__login:hover { background: var(--gold); color: var(--white); }
+
+        .login-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden;
+            transition: opacity var(--transition), visibility var(--transition);
+        }
+        .login-overlay.active { opacity: 1; visibility: visible; }
+
+        .login-modal {
+            background: var(--white); border-radius: var(--radius);
+            padding: var(--space-xl); width: min(90%, 420px);
+            box-shadow: var(--shadow-lg); position: relative;
+            transform: translateY(20px) scale(0.95);
+            transition: transform var(--transition);
+        }
+        .login-overlay.active .login-modal {
+            transform: translateY(0) scale(1);
+        }
+        .login-modal__close {
+            position: absolute; top: var(--space-md); right: var(--space-md);
+            font-size: 1.5rem; color: var(--gray); cursor: pointer;
+            min-height: 44px; min-width: 44px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-modal__close:hover { color: var(--black); }
+        .login-modal__title {
+            font-family: var(--font-heading); font-size: 1.6rem;
+            text-align: center; margin-bottom: var(--space-xs);
+        }
+        .login-modal__subtitle {
+            text-align: center; color: var(--gray); font-size: 0.9rem;
+            font-weight: 300; margin-bottom: var(--space-lg);
+        }
+        .login-modal .form-group { margin-bottom: var(--space-md); }
+        .login-modal .form-group label {
+            display: block; font-size: 0.8rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: var(--space-xs); color: var(--black);
+        }
+        .login-modal .form-group input {
+            width: 100%; padding: 0.8rem 1rem;
+            border: 1px solid var(--gray-light); border-radius: var(--radius);
+            font-size: 0.95rem; background: var(--white-off);
+            transition: border-color var(--transition);
+        }
+        .login-modal .form-group input:focus {
+            border-color: var(--gold); outline: none;
+            box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+        }
+        .login-modal__btn {
+            width: 100%; padding: 0.85rem; border: none; border-radius: var(--radius);
+            background: var(--gold); color: var(--white); font-weight: 600;
+            font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;
+            cursor: pointer; transition: background var(--transition);
+            min-height: 44px;
+        }
+        .login-modal__btn:hover { background: var(--gold-dark); }
+        .login-modal__btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .login-modal__error {
+            background: #fee; color: #c33; border: 1px solid #fcc;
+            padding: 0.6rem 1rem; border-radius: var(--radius);
+            font-size: 0.85rem; margin-bottom: var(--space-md);
+            display: none; text-align: center;
+        }
+        .login-modal__error.visible { display: block; }
+        .login-modal__spinner {
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: var(--white); border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 0.5rem; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         /* ========== ANIMATIONS ========== */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -579,6 +665,7 @@
         }
 
         @media (max-width: 768px) {
+            .navbar__login { font-size: 0.7rem; padding: 0.35rem 0.8rem; margin-right: 0.5rem; }
             .nav-toggle { display: flex; align-items: center; justify-content: center; }
             .nav-links {
                 position: fixed; top: 0; right: -100%; width: 280px; height: 100vh;
@@ -637,6 +724,7 @@
                 <li><a href="#equipo">Equipo</a></li>
                 <li><a href="#contacto">Contacto</a></li>
             </ul>
+            <button class="navbar__login" id="btn-login" aria-label="Iniciar sesion">Iniciar Sesion</button>
         </nav>
     </header>
 
@@ -1010,6 +1098,27 @@
         </section>
     </main>
 
+    <!-- LOGIN MODAL -->
+    <div class="login-overlay" id="login-overlay" role="dialog" aria-modal="true" aria-labelledby="login-title">
+        <div class="login-modal">
+            <button class="login-modal__close" id="login-close" aria-label="Cerrar">&times;</button>
+            <h2 class="login-modal__title" id="login-title">Bienvenido</h2>
+            <p class="login-modal__subtitle">Ingresa a tu panel de administracion</p>
+            <div class="login-modal__error" id="login-error"></div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-user">Usuario o Correo</label>
+                    <input type="text" id="login-user" name="name_email" required placeholder="tu@email.com" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="login-pass">Contrasena</label>
+                    <input type="password" id="login-pass" name="password" required placeholder="Tu contrasena" autocomplete="current-password">
+                </div>
+                <button type="submit" class="login-modal__btn" id="login-submit">Iniciar Sesion</button>
+            </form>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="footer" role="contentinfo">
         <div class="container">
@@ -1104,6 +1213,85 @@
         }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
         document.querySelectorAll('.animate').forEach(el => observer.observe(el));
+
+        // Login modal
+        const loginOverlay = document.getElementById('login-overlay');
+        const btnLogin = document.getElementById('btn-login');
+        const loginClose = document.getElementById('login-close');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const loginSubmit = document.getElementById('login-submit');
+
+        // Si ya hay sesion, cambiar boton a "Ir al Panel"
+        if (localStorage.getItem('auth_token')) {
+            btnLogin.textContent = 'Mi Panel';
+        }
+
+        btnLogin.addEventListener('click', () => {
+            if (localStorage.getItem('auth_token')) {
+                window.location.href = '/admin/';
+                return;
+            }
+            loginOverlay.classList.add('active');
+            document.getElementById('login-user').focus();
+        });
+
+        loginClose.addEventListener('click', () => {
+            loginOverlay.classList.remove('active');
+            loginError.classList.remove('visible');
+        });
+
+        loginOverlay.addEventListener('click', (e) => {
+            if (e.target === loginOverlay) {
+                loginOverlay.classList.remove('active');
+                loginError.classList.remove('visible');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && loginOverlay.classList.contains('active')) {
+                loginOverlay.classList.remove('active');
+                loginError.classList.remove('visible');
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginError.classList.remove('visible');
+            loginSubmit.disabled = true;
+            loginSubmit.innerHTML = '<span class="login-modal__spinner"></span>Ingresando...';
+
+            try {
+                const res = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name_email: document.getElementById('login-user').value.trim(),
+                        password: document.getElementById('login-pass').value
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.status && data.data && data.data.token) {
+                    localStorage.setItem('auth_token', data.data.token);
+                    localStorage.setItem('auth_user', JSON.stringify(data.data.user));
+                    window.location.href = '/admin/';
+                } else {
+                    loginError.textContent = data.message || 'Credenciales incorrectas';
+                    loginError.classList.add('visible');
+                }
+            } catch (err) {
+                loginError.textContent = 'Error de conexion. Intenta nuevamente.';
+                loginError.classList.add('visible');
+            } finally {
+                loginSubmit.disabled = false;
+                loginSubmit.textContent = 'Iniciar Sesion';
+            }
+        });
 
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
