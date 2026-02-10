@@ -11,3 +11,8 @@ Route::get('/user', function (Request $request) {
 #Rutas sin auth
 Route::get('/index', [Home::class, 'index']);
 Route::post('/auth', [Home::class, 'auth'])->name('login');
+
+#Rutas con auth
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [Home::class, 'logout'])->name('exit');
+});

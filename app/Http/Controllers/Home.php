@@ -23,4 +23,9 @@ class Home extends Controller
     {
         return $this->homeService->auth($request);
     }
+
+    public function logout(Request $request)
+    {
+        return $this->homeService->logout($request);
+    }
 }

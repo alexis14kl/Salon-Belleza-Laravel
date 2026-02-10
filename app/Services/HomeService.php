@@ -72,4 +72,16 @@ class HomeService {
         );
         return response()->json($msg, 200);
     }
+
+    public function logout(Request $data): JsonResponse
+    {
+        $data->user()->currentAccessToken()->delete();
+
+        $msg = array(
+            'status'  => true,
+            'message' => 'Sesion cerrada exitosamente',
+            'data'    => null
+        );
+        return response()->json($msg, 200);
+    }
 }
