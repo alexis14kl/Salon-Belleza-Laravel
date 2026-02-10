@@ -75,7 +75,9 @@ class HomeService {
 
     public function logout(Request $data): JsonResponse
     {
-        $data->user()->currentAccessToken()->delete();
+        /** @var \Laravel\Sanctum\PersonalAccessToken $token */
+        $token = $data->user()->currentAccessToken();
+        $token->delete();
 
         $msg = array(
             'status'  => true,
