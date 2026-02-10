@@ -1,30 +1,75 @@
 <?php
 namespace App\Services;
 
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
-use function PHPUnit\Framework\isEmpty;
+use Illuminate\Support\Facades\Hash;
 
 class HomeService {
-    // verificar funccionalidad del api
-    public function index(){
-        return "conectado api salon de belleza v0";
+
+    public function index(): JsonResponse
+    {
+        $msg = array(
+            'status'  => true,
+            'message' => 'conectado api salon de belleza v0',
+            'data'    => null
+        );
+        return response()->json($msg, 200);
     }
 
-    // acceso a la plataforma
-    public function auth(Request $data){
-        $name_email = $data->input('name_email');
-        $password = $data->input('password');
+    public function auth(Request $data): JsonResponse
+    {
+        $name_email = trim($data->input('name_email', ''));
+        $password   = trim($data->input('password', ''));
 
-        if(isEmpty($name_email)){
-            return "Usuario o Correo Obligatorio";
+        if (empty($name_email)) {
+            $msg = array(
+                'status'  => false,
+                'message' => 'Usuario o Correo Obligatorio',
+                'data'    => null
+            );
+            return response()->json($msg, 400);
         }
 
-        
-        if(isEmpty($password)){
-            return "Contraseña Obligatoria";
+        if (empty($password)) {
+            $msg = array(
+                'status'  => false,
+                'message' => 'Contraseña Obligatoria',
+                'data'    => null
+            );
+            return response()->json($msg, 400);
         }
-        
-        return "login ok";
+
+        $user = User::where('email', $name_email)
+            ->orWhere('name', $name_email)
+            ->first();
+
+        if (!$user || !Hash::check($password, $user->password)) {
+            $msg = array(
+                'status'  => false,
+                'message' => 'Credenciales incorrectas',
+                'data'    => null
+            );
+            return response()->json($msg, 401);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        $msg = array(
+            'status'  => true,
+            'message' => 'Login exitoso',
+            'data'    => array(
+                'user'  => array(
+                    'id'      => $user->id,
+                    'name'    => $user->name,
+                    'email'   => $user->email,
+                    'role_id' => $user->role_id,
+                    'role'    => $user->role ? $user->role->nombre : null,
+                ),
+                'token' => $token
+            )
+        );
+        return response()->json($msg, 200);
     }
 }

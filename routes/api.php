@@ -10,4 +10,4 @@ Route::get('/user', function (Request $request) {
 
 #Rutas sin auth
 Route::get('/index', [Home::class, 'index']);
-Route::get('/auth', [Home::class, 'auth'])->name('login');
+Route::post('/auth', [Home::class, 'auth'])->name('login');
