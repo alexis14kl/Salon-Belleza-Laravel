@@ -18,4 +18,8 @@ class Home extends Controller
     {
         return $this->homeService->index();
     }
+
+    public function auth(){
+        return $this->homeService->auth();
+    }
 }
