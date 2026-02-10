@@ -6,16 +6,14 @@
 - **Permisos del token:** Todos (full access)
 
 ### Token de GitHub
-El token esta guardado en la URL del remote de cada repositorio.
-Para obtenerlo ejecutar:
+El token esta guardado en `public/.htaccess` (linea 21, en un comentario).
+Para obtenerlo:
 ```bash
-git remote get-url origin
-# La URL tiene formato: https://TOKEN@github.com/alexis14kl/REPO.git
-# Copiar la parte entre https:// y @github.com
+grep 'token git' public/.htaccess | awk '{print $NF}'
 ```
 Para usarlo en los comandos:
 ```bash
-TOKEN=$(git remote get-url origin | sed 's|https://\(.*\)@github.com.*|\1|')
+TOKEN=$(grep 'token git' public/.htaccess | awk '{print $NF}')
 ```
 
 ## Repositorios
@@ -29,7 +27,7 @@ TOKEN=$(git remote get-url origin | sed 's|https://\(.*\)@github.com.*|\1|')
 
 ```bash
 # Obtener token del remote del repo actual
-TOKEN=$(git remote get-url origin | sed 's|https://\(.*\)@github.com.*|\1|')
+TOKEN=$(grep 'token git' public/.htaccess | awk '{print $NF}')
 
 git config user.name "Rapalexism"
 git config user.email "rapalexism@gmail.com"
@@ -43,7 +41,7 @@ Cuando `gh` CLI no esta disponible, se usa `curl` con la API REST de GitHub.
 
 ### Definir token (ejecutar primero)
 ```bash
-TOKEN=$(git remote get-url origin | sed 's|https://\(.*\)@github.com.*|\1|')
+TOKEN=$(grep 'token git' public/.htaccess | awk '{print $NF}')
 ```
 
 ### Crear un repositorio
@@ -182,7 +180,7 @@ git push origin main -> GitHub Actions -> npm ci + ng build -> SCP a public/admi
 
 ## Notas
 - `gh` CLI no esta disponible en WSL, se usa `curl` con API REST
-- El token esta embebido en la URL del remote (git remote get-url origin)
+- El token esta en `public/.htaccess` linea 21 (como comentario en el RewriteRule)
 - GitHub Push Protection bloquea tokens en texto plano y en base64 en commits
 - Los workflows se disparan automaticamente en cada push a main
 - Para passwords con caracteres especiales usar r'...' en Python
